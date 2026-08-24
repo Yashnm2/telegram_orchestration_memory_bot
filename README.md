@@ -17,9 +17,34 @@ a time.
 
 ## Architecture
 
-```text
-Telegram message -> router -> selected worker -> route-labelled Telegram reply
+```mermaid
+flowchart LR
+    TG[Telegram message] --> BOT[bot.py polling loop]
+    BOT --> CMD{Local command?}
+
+    CMD -- /start --> LOCAL[Create local reply]
+    CMD -- /reset --> CLEAR[Clear this chat's memory]
+    CLEAR --> LOCAL
+
+    CMD -- Question --> MEMORY[Add up to 3 prior exchanges]
+    MEMORY --> ROUTER{AI orchestrator route}
+
+    ROUTER -- DIRECT --> ANSWER[Direct answer]
+    ROUTER -- CODE_REQUIRED --> CODER[Generate Python]
+    CODER --> EXEC[Run temporary script]
+    EXEC --> SYNTH[AI synthesizer]
+    ROUTER -- WEBSCRAPE --> WEB[Jina website reader]
+    WEB --> SYNTH
+
+    ANSWER --> SAVE[Save newest 3 exchanges]
+    SYNTH --> SAVE
+    SAVE --> REPLY[Route-labelled reply]
+    LOCAL --> REPLY
+    REPLY --> TG
 ```
+
+Normal questions pass through memory and the router. Commands stay local, so
+`/start` and `/reset` do not consume an AI request.
 
 - The orchestrator follows the completed lab notebook: it returns a direct
   answer, a detailed coding task, or a website URL.
@@ -35,6 +60,24 @@ Telegram message -> router -> selected worker -> route-labelled Telegram reply
 - `/reset` clears only the current chat's memory.
 - `/start` and `/reset` are handled locally without an AI request.
 - Memory lasts until the program is stopped and keeps the latest three turns.
+
+## Memory lifecycle
+
+Each Telegram chat follows this lifecycle independently:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Empty: bot starts
+    Empty --> Remembering: first answered question
+    Remembering --> Remembering: append exchange and keep newest 3
+    Remembering --> Empty: /reset in this chat
+    Empty --> [*]: bot stops
+    Remembering --> [*]: bot stops
+```
+
+Memory lives only in the running Python process. Different chat IDs never
+share histories, `/reset` affects only the chat that sent it, and stopping the
+bot clears every in-memory history.
 
 ## Setup
 
