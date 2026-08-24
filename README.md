@@ -61,24 +61,6 @@ Normal questions pass through memory and the router. Commands stay local, so
 - `/start` and `/reset` are handled locally without an AI request.
 - Memory lasts until the program is stopped and keeps the latest three turns.
 
-## Memory lifecycle
-
-Each Telegram chat follows this lifecycle independently:
-
-```mermaid
-stateDiagram-v2
-    [*] --> Empty: bot starts
-    Empty --> Remembering: first answered question
-    Remembering --> Remembering: append exchange and keep newest 3
-    Remembering --> Empty: /reset in this chat
-    Empty --> [*]: bot stops
-    Remembering --> [*]: bot stops
-```
-
-Memory lives only in the running Python process. Different chat IDs never
-share histories, `/reset` affects only the chat that sent it, and stopping the
-bot clears every in-memory history.
-
 ## Setup
 
 Python 3.10 or newer is required. Follow the complete
