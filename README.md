@@ -85,8 +85,6 @@ Python 3.10 or newer is required. Follow the complete
 [Windows and macOS run guide](RUN_GUIDE.md) to create a virtual environment,
 configure the API keys, run the offline tests, and start the bot.
 
-## Memory check
-
 Send these messages to the bot:
 
 1. `My project is called Moss.`
